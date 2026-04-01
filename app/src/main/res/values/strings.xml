@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">TV &amp; Video Streaming</string>
+    <string name="home">Beranda</string>
+    <string name="play_video">Putar Video</string>
+    <string name="trending">Trending</string>
+    <string name="featured">Video Pilihan</string>
+</resources>
