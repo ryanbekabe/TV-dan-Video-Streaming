@@ -10,10 +10,19 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.addCallback
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
+    private val client = OkHttpClient()
+    private val GITHUB_URL_FILE = "https://raw.githubusercontent.com/ryanbekabe/TV-dan-Video-Streaming/main/url.txt"
+    private val FALLBACK_URL = "https://tv10.lk21official.cc/"
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,7 +57,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        webView.loadUrl("https://tv10.lk21official.cc/")
+        // Fetch URL from GitHub
+        fetchDynamicUrl()
 
         onBackPressedDispatcher.addCallback(this) {
             if (webView.canGoBack()) {
@@ -57,6 +67,32 @@ class MainActivity : ComponentActivity() {
                 finish()
             }
         }
+    }
+
+    private fun fetchDynamicUrl() {
+        val request = Request.Builder()
+            .url(GITHUB_URL_FILE)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // If fetch fails, use fallback URL
+                runOnUiThread {
+                    webView.loadUrl(FALLBACK_URL)
+                }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                val fetchedUrl = response.body?.string()?.trim()
+                runOnUiThread {
+                    if (fetchedUrl != null && fetchedUrl.startsWith("http")) {
+                        webView.loadUrl(fetchedUrl)
+                    } else {
+                        webView.loadUrl(FALLBACK_URL)
+                    }
+                }
+            }
+        })
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
